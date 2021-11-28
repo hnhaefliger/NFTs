@@ -99,6 +99,8 @@ def create_discriminator(input_shape=(64, 64, 3), load_path=False):
     if load_path:
         discriminator.load_weights(load_path)
 
+    return discriminator
+
 
 def create_models(seed_dim=128, generator_load_path=False, discriminator_load_path=False):
     generator = create_generator(seed_dim=seed_dim, load_path=generator_load_path)
