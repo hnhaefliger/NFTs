@@ -67,7 +67,7 @@ def generator_head(generator):
 
     inner = generator(inner)
 
-    inner = Conv2D(3, (4,4), strides=1, padding='same')(inner)
+    inner = Conv2D(3, (1, 1), strides=1, padding='same')(inner)
     inner = Activation('sigmoid')(inner)
 
     head = Model(inputs=inputs, outputs=inner)
