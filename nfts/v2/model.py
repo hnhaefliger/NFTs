@@ -62,7 +62,7 @@ def generator_base(latent_dim):
 
 
 def generator_head(generator):
-    inputs = Input(shape=generator.input_shape)
+    inputs = Input(shape=generator.input_shape[1:])
     inner = inputs
 
     inner = generator(inner)
@@ -127,8 +127,8 @@ def upscale_generator(generator, filters=128):
 
 def upscale_discriminator(discriminator, learning_rate=5e-5):
     inputs = Input(shape=(
-        discriminator.input_shape[0] * 2,
         discriminator.input_shape[1] * 2,
+        discriminator.input_shape[2] * 2,
         3
     ))
     inner = inputs
