@@ -36,9 +36,9 @@ def train(data, n_upscales=4, batches_per_res=10000, batches_per_gen=5, debug=Fa
 
         combined = model.create_combined(generator, discriminator, learning_rate=5e-5)
 
-        resolution = resolution * 4
+        resolution = resolution * 2
 
-        bar = tqdm.tqdm(range(batches_per_res), desc=resolution, leave=True, unit='B')
+        bar = tqdm.tqdm(range(batches_per_res), desc=f'resolution {resolution}', leave=True, unit='B')
 
         for batch in bar:
             for disc_batch in range(batches_per_gen):
@@ -58,7 +58,7 @@ def train(data, n_upscales=4, batches_per_res=10000, batches_per_gen=5, debug=Fa
 
             if debug:
                 if batch % debug == 0:
-                    save_img(f'debug_path/debug_{time.time()}.png', tf.concat([*fake_x], axis=1))
+                    save_img(f'{debug_path}/debug_{int(time.time())}.png', tf.concat([*fake_x], axis=1))
 
             if save:
                 if batch % save == 0:
