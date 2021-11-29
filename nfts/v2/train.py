@@ -28,7 +28,7 @@ def train(data, n_upscales=4, batches_per_res=10000, batches_per_gen=5, debug=Fa
     resolution = 4
 
 
-    for upscale in n_upscales:
+    for upscale in range(n_upscales):
         generator_base = model.upscale_generator(generator_base, filters=128)
         generator = model.generator_head(generator_base)
 
