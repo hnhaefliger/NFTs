@@ -62,7 +62,7 @@ def generator_base(latent_dim):
 
 
 def generator_head(generator):
-    inputs = Input(shape=generator.input_shape[1:])
+    inputs = Input(shape=(generator.input_shape[1], ))
     inner = inputs
 
     inner = generator(inner)
