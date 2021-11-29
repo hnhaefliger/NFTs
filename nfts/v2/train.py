@@ -18,7 +18,7 @@ def train(data, n_upscales=4, batches_per_res=10000, batches_per_gen=5, debug=Fa
             os.mkdir(debug_path)
 
 
-    generator_base = model.generator_base()
+    generator_base = model.generator_base(128)
     generator = model.generator_head(generator_base)
 
     discriminator = model.discriminator_head(learning_rate=5e-5)
