@@ -57,7 +57,11 @@ def create_generator(seed_dim=128, load_path=False):
     generator.compile(loss='mse', optimizer=RMSprop(learning_rate=0.00005))
 
     if load_path:
-        generator.load_weights(load_path)
+        try:
+            generator.load_weights(load_path)
+        
+        except:
+            print('failed to load generator')
 
     return generator
 
@@ -97,7 +101,11 @@ def create_discriminator(input_shape=(64, 64, 3), load_path=False):
     discriminator.compile(loss=wasserstein_loss, optimizer=RMSprop(learning_rate=0.00005))
 
     if load_path:
-        discriminator.load_weights(load_path)
+        try:
+            discriminator.load_weights(load_path)
+
+        except: 
+            print('failed to load generator')
 
     return discriminator
 

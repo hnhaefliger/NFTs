@@ -46,6 +46,7 @@ if __name__ == '__main__':
     dataset_path = sys.argv[1]
 
     data = dataset.Dataset([dataset_path + '/' + image for image in os.listdir(dataset_path)], 16)
-    generator, discriminator, combined = model.create_models()
+
+    generator, discriminator, combined = model.create_models(generator_load_path='nft_generator.h5', discriminator_load_path='nft_discriminator.h5')
 
     train(generator, discriminator, combined, data, 100000, disc_batches=3, debug=250, debug_path='nft_debug.png', save=250, generator_save_path='nft_generator.h5', discriminator_save_path='nft_discriminator.h5')
