@@ -66,17 +66,22 @@ def get_dataset():
     os.mkdir('wikiart')
 
     artists = get_artists()
+    i = 0
 
     for artist in artists:
         paintings = get_artist_paintings(artist)
 
         for painting in paintings:
-            info = get_painting_info(painting[0])
+            info = get_painting_info(painting['url'])
+
+            image = requests.get(painting['image'], verify=False).content
+
+            with open(f'wikiart/image_{i}.jpg', 'wb') as f:
+                f.write(image)
+
+            with open('wikiart.txt', 'a+') as f:
+                f.write(f'wikiart/image_{i}.jpg,{info[0]},{"|".join(info[1])},{"|".join(info[2])},{"|".join(info[3])}\n')
 
 
-artists = get_artists()
-print(artists)
-paintings = get_artist_paintings(artists[0])
-print(paintings)
-
-print(get_painting_info(paintings[0]['url']))
+if __name__ == '__main__':
+    get_dataset()
