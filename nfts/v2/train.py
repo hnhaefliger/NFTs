@@ -39,10 +39,10 @@ def train(
     generator_base, generator_head, generator = model.create_generator(n_noise=n_noise, n_channels=n_channels, momentum=momentum)
 
     discriminator_base, discriminator_head, discriminator = model.create_discriminator(n_channels=64)
-    discriminator.compile(loss=model.wasserstein_loss, optimizer=tf.keras.optimizers.Adam(learning_rate=discriminator_learning_rate))
+    discriminator.compile(loss=model.wasserstein_loss, optimizer=tf.keras.optimizers.RMSprop(learning_rate=generator_learning_rate))
 
     combined = model.create_combined(generator, discriminator, n_noise=n_noise)
-    combined.compile(loss=model.wasserstein_loss, optimizer=tf.keras.optimizers.Adam(learning_rate=generator_learning_rate))
+    combined.compile(loss=model.wasserstein_loss, optimizer=tf.keras.optimizers.RMSprop(learning_rate=generator_learning_rate))
 
 
     for upscale in range(n_upscales):
@@ -50,10 +50,10 @@ def train(
         generator_base, generator_head, generator = model.grow_generator(generator_base, generator_head, n_noise=n_noise, n_channels=n_channels, momentum=momentum)
 
         discriminator_base, discriminator_head, discriminator = model.grow_discriminator(discriminator_base, discriminator_head, n_channels=64, momentum=momentum)
-        discriminator.compile(loss=model.wasserstein_loss, optimizer=tf.keras.optimizers.Adam(learning_rate=discriminator_learning_rate))
+        discriminator.compile(loss=model.wasserstein_loss, optimizer=tf.keras.optimizers.RMSprop(learning_rate=discriminator_learning_rate))
 
         combined = model.create_combined(generator, discriminator, n_noise=n_noise)
-        combined.compile(loss=model.wasserstein_loss, optimizer=tf.keras.optimizers.Adam(learning_rate=generator_learning_rate))
+        combined.compile(loss=model.wasserstein_loss, optimizer=tf.keras.optimizers.RMSprop(learning_rate=discriminator_learning_rate))
 
         resolution = resolution * 2
 
@@ -116,6 +116,6 @@ if __name__ == '__main__':
         n_noise=256,
         n_channels=256,
         momentum=0.8,
-        generator_learning_rate=1e-3,
-        discriminator_learning_rate=1e-3,
+        generator_learning_rate=0.00005,
+        discriminator_learning_rate=0.00005,
     )
