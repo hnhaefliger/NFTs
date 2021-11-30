@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input, Dense, Conv2D, BatchNormalization, Reshape, Dropout, LeakyReLU, Flatten, Add, UpSampling2D, Activation, Layer, PReLU
+from tensorflow.keras.layers import Input, Dense, Conv2D, BatchNormalization, Reshape, Multiply, LeakyReLU, Flatten, Add, UpSampling2D, Activation, Layer, PReLU
 from tensorflow.keras.optimizers import RMSprop
 
 
@@ -12,8 +12,26 @@ def wasserstein_loss(y_true, y_pred):
   return tf.reduce_mean(y_true * y_pred)
 
 
+def AdaIn(n_styles=256, n_channels=256):
+    styles = Input(shape=(n_styles))
+    inputs = Input(shape=(1,))  # constant
+    inner = inputs
+
+    styles1 = Dense(n_channels)(styles)
+    styles1 = Reshape(1, 1, n_channels)(styles1)
+
+    styles2 = Dense(n_channels)(styles)
+    styles2 = Reshape(1, 1, n_channels)(styles2)
+
+    inner = Multiply()([inner, styles1 + 1])
+    inner = Add()([inner, styles2])
+
+    return Model(inputs=[styles, inputs], outputs=inner)
+
+
 class AdaIN(Layer):
     def build(self, input_shapes):
+        print(input_shapes)
         self.styles_shape = input_shapes[0]
         self.x_shape = input_shapes[1]
 
