@@ -79,7 +79,7 @@ def train(
             discriminator.trainable = False
 
             for _ in range(gen_batches):
-                real_x = data.get_batch((resolution, resolution))
+                real_x = data[(resolution, resolution)]
                 gen_x = noise = np.random.normal(0, 1, (data.batch_size, n_styles))
 
                 generator_loss = combined.train_on_batch([gen_x, constant], real_y)
