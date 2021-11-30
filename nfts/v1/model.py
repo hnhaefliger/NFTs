@@ -31,14 +31,14 @@ def create_generator(seed_dim=128, momentum=0.8, load_path=False):
     inputs = Input(shape=(seed_dim))
     inner = inputs
 
-    inner = Dense(seed_dim * 4 * 4)(inner)
+    inner = Dense(seed_dim * 8 * 8)(inner)
     inner = PReLU()(inner)
-    inner = Reshape((4, 4, seed_dim))(inner)
+    inner = Reshape((8, 8, seed_dim))(inner)
 
     inner = UpSampling2D()(inner)
 
-    inner = Conv2D(128, (4, 4), strides=1, padding='same')(inner)
-    inner = PReLU()(inner)
+    #inner = Conv2D(128, (4, 4), strides=1, padding='same')(inner)
+    #inner = PReLU()(inner)
     #inner = BatchNormalization(momentum=momentum)(inner)
 
     inner = UpSampling2D()(inner)
