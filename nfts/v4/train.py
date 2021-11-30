@@ -65,8 +65,8 @@ def train(
         for batch in bar:
             # discriminator training
             for _ in range(disc_batches):
-                real_x = data.get_batch((resolution, resolution))
-                gen_x = noise = np.random.normal(0, 1, (data.batch_size, n_styles))
+                real_x = data[(resolution, resolution)]
+                gen_x = np.random.normal(0, 1, (data.batch_size, n_styles))
 
                 fake_x = generator.predict([gen_x, constant])
 
@@ -80,7 +80,7 @@ def train(
 
             for _ in range(gen_batches):
                 real_x = data[(resolution, resolution)]
-                gen_x = noise = np.random.normal(0, 1, (data.batch_size, n_styles))
+                gen_x = np.random.normal(0, 1, (data.batch_size, n_styles))
 
                 generator_loss = combined.train_on_batch([gen_x, constant], real_y)
 
