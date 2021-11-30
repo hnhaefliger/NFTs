@@ -12,11 +12,7 @@ def wasserstein_loss(y_true, y_pred):
   return tf.reduce_mean(y_true * y_pred)
 
 
-def AdaIn(n_styles=256, n_channels=256):
-    styles = Input(shape=(n_styles))
-    inputs = Input(shape=(None, None, n_channels))
-    inner = inputs
-
+def AdaIN(styles, inner, n_styles=256, n_channels=256):
     styles1 = Dense(n_channels)(styles)
     styles1 = Reshape(1, 1, n_channels)(styles1)
 
@@ -26,7 +22,7 @@ def AdaIn(n_styles=256, n_channels=256):
     inner = Multiply()([inner, styles1 + 1])
     inner = Add()([inner, styles2])
 
-    return Model(inputs=[styles, inputs], outputs=inner)
+    return inner
 
 
 def generator_base(n_styles=256, n_channels=256, momentum=0.8):
@@ -40,14 +36,14 @@ def generator_base(n_styles=256, n_channels=256, momentum=0.8):
     inner = PReLU()(inner)
     inner = BatchNormalization(axis=3, momentum=momentum)(inner)
 
-    inner = AdaIN()(styles, inner)
+    inner = AdaIN(styles, inner, n_styles=n_styles, n_channels=n_channels)
 
     inner = Conv2D(n_channels, (3, 3), padding='same')(inner)
     # noise
     inner = PReLU()(inner)
     inner = BatchNormalization(axis=3, momentum=momentum)(inner)
     
-    inner = AdaIN()(styles, inner)
+    inner = AdaIN(styles, inner, n_styles=n_styles, n_channels=n_channels)
 
     return Model(inputs=[styles, inputs], outputs=inner)
 
@@ -64,14 +60,14 @@ def generator_block(n_styles=256, n_channels=256, momentum=0.8):
     inner = PReLU()(inner)
     inner = BatchNormalization(axis=3, momentum=momentum)(inner)
 
-    inner = AdaIN()(styles, inner)
+    inner = AdaIN(styles, inner, n_styles=n_styles, n_channels=n_channels)
 
     inner = Conv2D(n_channels, (3, 3), strides=1, padding='same')(inner)
     # noise
     inner = PReLU()(inner)
     inner = BatchNormalization(axis=3, momentum=momentum)(inner)
 
-    inner = AdaIN()(styles, inner)
+    inner = AdaIN(styles, inner, n_styles=n_styles, n_channels=n_channels)
 
     return Model(inputs=[styles, inputs], outputs=inner)
 
