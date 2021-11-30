@@ -25,7 +25,6 @@ def train(
         momentum=0.8,
         generator_learning_rate=1e-3,
         discriminator_learning_rate=1e-3,
-        batch_size = 16,
     ):
     if debug:
         if not os.path.isdir(debug_path):
@@ -66,9 +65,9 @@ def train(
             # discriminator training
             for _ in range(disc_batches):
                 real_x = data.get_batch((resolution, resolution))
-                gen_x = noise = np.random.normal(0, 1, (batch_size, n_styles))
+                gen_x = noise = np.random.normal(0, 1, (data.batch_size, n_styles))
 
-                fake_x = generator.predict(gen_x)
+                fake_x = generator.predict([gen_x, constant])
 
                 disc_x = np.concatenate((real_x, fake_x), axis=0)
                 disc_y = np.concatenate((real_y, fake_y), axis=0)
@@ -81,9 +80,9 @@ def train(
 
             for _ in range(gen_batches):
                 real_x = data.get_batch((resolution, resolution))
-                gen_x = noise = np.random.normal(0, 1, (batch_size, n_styles))
+                gen_x = noise = np.random.normal(0, 1, (data.batch_size, n_styles))
 
-                generator_loss = combined.train_on_batch(gen_x, real_y)
+                generator_loss = combined.train_on_batch([gen_x, constant], real_y)
 
 
             # utils
@@ -121,5 +120,4 @@ if __name__ == '__main__':
         momentum=0.8,
         generator_learning_rate=1e-3,
         discriminator_learning_rate=1e-3,
-        batch_size=16,
     )
