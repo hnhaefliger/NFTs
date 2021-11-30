@@ -48,9 +48,9 @@ def generator_base(n_styles=256, n_channels=256, momentum=0.8):
     return Model(inputs=[styles, inputs], outputs=inner)
 
 
-def generator_block(n_styles=256, n_channels=256, momentum=0.8):
+def generator_block(resolution, n_styles=256, n_channels=256, momentum=0.8):
     styles = Input(shape=(n_styles))
-    inputs = Input(shape=(1,))
+    inputs = Input(shape=resolution)
     inner = inputs
 
     inner = UpSampling2D()(inner)
@@ -103,7 +103,7 @@ def grow_generator(base, head, n_styles=256, n_channels=256, momentum=0.8):
     
     inner = base([styles, inner])
 
-    base = generator_block(n_styles=n_styles, n_channels=n_channels, momentum=momentum)
+    base = generator_block(base.output_shape, n_styles=n_styles, n_channels=n_channels, momentum=momentum)
     inner = base([styles, inner])
 
     inner = head(inner)
