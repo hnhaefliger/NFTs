@@ -200,7 +200,7 @@ def create_combined(generator, discriminator, n_styles=256):
     inputs = Input(shape=(1,))
     inner = inputs
 
-    inner = generator(inner)
+    inner = generator([styles, inner])
     inner = discriminator(inner)
 
     return Model(inputs=[styles, inputs], outputs=inner)
