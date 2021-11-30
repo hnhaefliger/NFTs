@@ -13,41 +13,17 @@ def clamp_weights(w):
 def wasserstein_loss(y_true, y_pred):
   return tf.reduce_mean(y_true * y_pred)
 
-'''
+
 class Gaussian(Layer):
     def build(self, input_shape):
         self.n, self.h, self.w, self.c = input_shape
         self.channel_weights = self.add_weight(shape=[1, 1, 1, self.c], trainable=True)
+        self.random = backend.RandomGenerator(None)
 
     def call(self, x):
-        noise = tf.random.random_normal(shape=(x.shape[0], x.shape[1], 1), mean=0., stddev=1., dtype=x.dtype)()
+        noise = self.random.random_normal(shape=(x.shape[0], x.shape[1], 1), mean=0., stddev=1., dtype=x.dtype)()
         outputs = x + self.b * noise
         return outputs
-'''
-
-
-class Gaussian(Layer):
-    def __init__(self, stddev, seed=None, **kwargs):
-        super(Gaussian, self).__init__(**kwargs)
-        self.supports_masking = True
-        self.stddev = stddev
-        self.seed = seed
-        self._random_generator = backend.RandomGenerator(seed)
-
-    def call(self, inputs, training=None):
-        def noised():
-            return inputs + self._random_generator.random_normal(
-                shape=tf.shape(inputs),
-                mean=0.,
-                stddev=self.stddev,
-                dtype=inputs.dtype)
-
-        return noised()
-
-    def get_config(self):
-        config = {'stddev': self.stddev, 'seed': self.seed}
-        base_config = super(Gaussian, self).get_config()
-        return dict(list(base_config.items()) + list(config.items()))
 
     @tf_utils.shape_type_conversion
     def compute_output_shape(self, input_shape):
