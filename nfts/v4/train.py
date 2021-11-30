@@ -34,6 +34,7 @@ def train(
     resolution = 4
     fake_y = np.ones((data.batch_size, 1))
     real_y = -1 * np.ones((data.batch_size, 1))
+    disc_y = np.concatenate((real_y, fake_y), axis=0)
     constant = np.ones((data.batch_size, 1))
 
 
@@ -70,7 +71,6 @@ def train(
                 fake_x = generator.predict([gen_x, constant])
 
                 disc_x = np.concatenate((real_x, fake_x), axis=0)
-                disc_y = np.concatenate((real_y, fake_y), axis=0)
 
                 discriminator_loss = discriminator.train_on_batch(disc_x, disc_y)
 
