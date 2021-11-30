@@ -21,9 +21,10 @@ class Gaussian(Layer):
         self.random = backend.RandomGenerator(None)
 
     def call(self, x):
-        noise = self.random.random_normal(shape=(x.shape[0], x.shape[1], 1), mean=0., stddev=1., dtype=x.dtype)()
-        outputs = x + self.b * noise
-        return outputs
+        def noised():
+            return x + self.channel_weights * self._random_generator.random_normal(shape=(x.shape[0], x.shape[1], x.shape[2], 1), mean=0., stddev=self.stddev, dtype=x.dtype)
+
+        return noised()
 
     @tf_utils.shape_type_conversion
     def compute_output_shape(self, input_shape):
