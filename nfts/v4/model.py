@@ -155,7 +155,7 @@ def discriminator_head(n_channels=256):
 
 
 def create_discriminator(n_channels=256):
-    inputs = Input(shape=(4, 4, n_channels))
+    inputs = Input(shape=(4, 4, 3))
     inner = inputs
 
     base = discriminator_base(n_channels=n_channels)
@@ -182,7 +182,7 @@ def grow_discriminator_head(head, n_channels=256, momentum=0.8):
 
 
 def grow_discriminator(base, head, n_channels=256, momentum=0.8):
-    resolution = (head.input_shape[1]*2, head.input_shape[1]*2, n_channels)
+    resolution = (head.input_shape[1]*2, head.input_shape[1]*2, 3)
 
     inputs = Input(shape=resolution)
     inner = inputs
@@ -195,10 +195,12 @@ def grow_discriminator(base, head, n_channels=256, momentum=0.8):
     return base, head, Model(inputs=inputs, outputs=inner)
 
 
-generator_base, generator_head, generator = create_generator()
-generator_base, generator_head, generator = grow_generator(generator_base, generator_head)
-generator_base, generator_head, generator = grow_generator(generator_base, generator_head)
+def create_combined(generator, discriminator, n_styles=256):
+    styles = Input(shape=(n_styles))
+    inputs = Input(shape=(1,))
+    inner = inputs
 
-discriminator_base, discriminator_head, discriminator = create_discriminator()
-discriminator_base, discriminator_head, discriminator = grow_discriminator(discriminator_base, discriminator_head)
-discriminator_base, discriminator_head, discriminator = grow_discriminator(discriminator_base, discriminator_head)
+    inner = generator(inner)
+    inner = discriminator(inner)
+
+    return Model(inputs=[styles, inputs], outputs=inner)
