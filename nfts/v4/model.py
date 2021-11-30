@@ -34,7 +34,7 @@ def generator_base(n_styles=256, n_channels=256, momentum=0.8):
     inner = inputs
 
     inner = Dense(4 * 4 * n_channels)(inputs)
-    inner = Reshape((4, 4, n_channels))(inputs)
+    inner = Reshape((4, 4, n_channels))(inner)
     # noise
     inner = PReLU()(inner)
     inner = BatchNormalization(axis=3, momentum=momentum)(inner)
@@ -110,6 +110,10 @@ def grow_generator(base, head, n_styles=256, n_channels=256, momentum=0.8):
     inner = head(inner)
 
     return base, head, Model(inputs=[styles, inputs], outputs=inner)
+
+
+def discriminator_block(resolution, n_channels):
+    pass
 
 
 base, head, generator = create_generator()
