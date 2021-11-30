@@ -58,7 +58,11 @@ def get_painting_info(painting):
     
     tags = re.findall('<a target="_self" class="tags-cheaps__item__ref" href=".+?">\s*(.+?)\s*</a>', html)
 
-    return date[0], styles, genres, tags
+    try:
+        return date[0], styles, genres, tags
+
+    except:
+        return 0, styles, genres, tags
 
 
 def get_dataset():
@@ -84,7 +88,5 @@ def get_dataset():
             i += 1
 
 
-print(get_painting_info('en/raphael/the-veiled-woman-or-la-donna-velata'))
-
-#if __name__ == '__main__':
-    #get_dataset()
+if __name__ == '__main__':
+    get_dataset()
