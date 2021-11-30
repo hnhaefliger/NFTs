@@ -35,7 +35,7 @@ def train(
     for batch in bar:
         for _ in range(disc_batches):
             real_x = data[0]
-            gen_x = np.random.normal(0, 1, (data.batch_size, 128))
+            gen_x = np.random.normal(0, 1, (data.batch_size, n_noise))
 
             fake_x = generator.predict(gen_x)
             disc_x = np.concatenate((real_x, fake_x), axis=0)
@@ -45,7 +45,7 @@ def train(
         discriminator.trainable = False
 
         for _ in range(gen_batches):
-            gen_x = np.random.normal(0, 1, (data.batch_size, 128))
+            gen_x = np.random.normal(0, 1, (data.batch_size, n_noise))
 
             generator_loss = combined.train_on_batch(gen_x, real_y)
 
