@@ -83,7 +83,7 @@ def get_dataset():
                 f.write(image)
 
             with open('wikiart.txt', 'a+') as f:
-                f.write(f'wikiart/image_{i}.jpg,{artist},{painting},{info[0]},{"|".join(info[1])},{"|".join(info[2])},{"|".join(info[3])}\n')
+                f.write(f'wikiart/image_{i}.jpg,{artist},{painting["url"]},{info[0]},{"|".join(info[1])},{"|".join(info[2])},{"|".join(info[3])}\n')
 
             i += 1
 
