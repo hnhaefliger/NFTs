@@ -9,7 +9,7 @@ def clamp_weights(w):
 
 
 def wasserstein_loss(y_true, y_pred):
-  return tf.reduce_mean(y_true * y_pred)
+  return -tf.reduce_mean(y_true * y_pred)
 
 
 def AdaIN(styles, inner, n_styles=256, n_channels=256):
