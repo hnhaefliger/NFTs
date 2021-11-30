@@ -24,6 +24,9 @@ class Gaussian(Layer):
         def noised():
             return x + self.channel_weights * self.random.random_normal(shape=(x.shape[0], x.shape[1], x.shape[2], 1), mean=0., stddev=1., dtype=x.dtype)
 
+        if isinstance(x.shape[0], type(None)):
+            return x
+
         return noised()
 
     @tf_utils.shape_type_conversion
