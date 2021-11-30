@@ -9,7 +9,7 @@ def clamp_weights(w):
 
 
 def wasserstein_loss(y_true, y_pred):
-  return -tf.reduce_mean(y_true * y_pred)
+  return tf.reduce_mean(y_true * y_pred)
 
 
 def residual_block(x, filters, kernel_size=(4, 4), strides=1, bn=False):
