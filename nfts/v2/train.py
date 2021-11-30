@@ -106,7 +106,7 @@ if __name__ == '__main__':
         data,
         n_upscales=4,
         batches_per_res={4: 500, 8: 1000, 16: 2500, 32: 10000, 64: 20000},
-        disc_batches=3,
+        disc_batches=5,
         gen_batches=1,
         debug=250,
         debug_path='nft_debug',
