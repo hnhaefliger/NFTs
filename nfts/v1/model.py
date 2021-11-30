@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input, Dense, Conv2D, BatchNormalization, Reshape, Dropout, LeakyReLU, Flatten, Add, UpSampling2D, Activation, Conv2DTranspose, PReLU
+from tensorflow.keras.layers import Input, Dense, Conv2D, BatchNormalization, Reshape, Dropout, LeakyReLU, Flatten, Add, UpSampling2D, Activation, PReLU
 from tensorflow.keras.optimizers import RMSprop
 
 
@@ -9,7 +9,7 @@ def clamp_weights(w):
 
 
 def wasserstein_loss(y_true, y_pred):
-  return tf.reduce_mean(y_true * y_pred)
+  return -tf.reduce_mean(y_true * y_pred)
 
 
 def residual_block(x, filters, kernel_size=(4, 4), strides=1, bn=False):
@@ -54,7 +54,6 @@ def create_generator(seed_dim=128, load_path=False):
     outputs = Activation('sigmoid')(inner)
 
     generator = Model(inputs=inputs, outputs=outputs)
-    generator.compile(loss='mse', optimizer=RMSprop(learning_rate=0.00005))
 
     if load_path:
         try:
@@ -98,23 +97,19 @@ def create_discriminator(input_shape=(64, 64, 3), load_path=False):
     outputs = Dense(1, kernel_constraint=clamp_weights)(inner)
 
     discriminator = Model(inputs=inputs, outputs=outputs)
-    discriminator.compile(loss=wasserstein_loss, optimizer=RMSprop(learning_rate=0.00005))
 
     if load_path:
         try:
             discriminator.load_weights(load_path)
 
         except: 
-            print('failed to load generator')
+            print('failed to load discriminator')
 
     return discriminator
 
 
-def create_models(seed_dim=128, generator_load_path=False, discriminator_load_path=False):
-    generator = create_generator(seed_dim=seed_dim, load_path=generator_load_path)
-    discriminator = create_discriminator(input_shape=(64, 64, 3), load_path=discriminator_load_path)
-
-    inputs = Input(shape=(seed_dim))
+def create_combined(generator, discriminator, seed_dim=128,):
+    inputs = Input(shape=(seed_dim,))
     inner = inputs
 
     inner = generator(inner)
@@ -124,7 +119,5 @@ def create_models(seed_dim=128, generator_load_path=False, discriminator_load_pa
 
     outputs = inner
 
-    combined = Model(inputs=inputs, outputs=outputs)
-    combined.compile(loss=wasserstein_loss, optimizer=RMSprop(learning_rate=0.00005))
+    return Model(inputs=inputs, outputs=outputs)
 
-    return generator, discriminator, combined
