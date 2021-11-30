@@ -9,51 +9,81 @@ import model
 import dataset
 
 
-def train(data, n_upscales=4, batches_per_res=10000, batches_per_gen=5, debug=False, debug_path=False, save=False, generator_save_path=False, discriminator_save_path=False):
-    fake_y = np.ones((data.batch_size, 1))
-    real_y = -1 * np.ones((data.batch_size, 1))
-
+def train(
+        data,
+        n_upscales=4,
+        batches_per_res={4: 500, 8: 1000, 16: 2500, 32: 10000, 64: 20000},
+        disc_batches=3,
+        gen_batches=1,
+        debug=False,
+        debug_path=False,
+        save=False,
+        generator_save_path=False,
+        discriminator_save_path=False,
+        n_noise=256,
+        n_channels=256,
+        momentum=0.8,
+        generator_learning_rate=1e-3,
+        discriminator_learning_rate=1e-3,
+    ):
     if debug:
         if not os.path.isdir(debug_path):
             os.mkdir(debug_path)
 
-
-    generator_base = model.generator_base(128)
-    generator = model.generator_head(generator_base)
-
-    discriminator = model.discriminator_head(learning_rate=5e-5)
-
-    combined = model.create_combined(generator, discriminator, learning_rate=5e-5)
-
     resolution = 4
+    fake_y = np.ones((data.batch_size, 1))
+    real_y = -1 * np.ones((data.batch_size, 1))
+    disc_y = np.concatenate((real_y, fake_y), axis=0)
+
+
+    generator_base, generator_head, generator = model.create_generator(n_noise=n_noise, n_channels=n_channels, momentum=momentum)
+
+    discriminator_base, discriminator_head, discriminator = model.create_discriminator(n_channels=64)
+    discriminator.compile(loss=model.wasserstein_loss, optimizer=tf.keras.optimizers.Adam(learning_rate=discriminator_learning_rate))
+
+    combined = model.create_combined(generator, discriminator, n_noise=n_noise)
+    combined.compile(loss=model.wasserstein_loss, optimizer=tf.keras.optimizers.Adam(learning_rate=generator_learning_rate))
 
 
     for upscale in range(n_upscales):
-        generator_base = model.upscale_generator(generator_base, filters=128)
-        generator = model.generator_head(generator_base)
+        # grow models
+        generator_base, generator_head, generator = model.grow_generator(generator_base, generator_head, n_noise=n_noise, n_channels=n_channels, momentum=momentum)
 
-        discriminator = model.upscale_discriminator(discriminator, learning_rate=5e-5)
+        discriminator_base, discriminator_head, discriminator = model.grow_discriminator(discriminator_base, discriminator_head, n_channels=64, momentum=momentum)
+        discriminator.compile(loss=model.wasserstein_loss, optimizer=tf.keras.optimizers.Adam(learning_rate=discriminator_learning_rate))
 
-        combined = model.create_combined(generator, discriminator, learning_rate=5e-5)
+        combined = model.create_combined(generator, discriminator, n_noise=n_noise)
+        combined.compile(loss=model.wasserstein_loss, optimizer=tf.keras.optimizers.Adam(learning_rate=generator_learning_rate))
 
         resolution = resolution * 2
 
-        bar = tqdm.tqdm(range(batches_per_res), desc=f'resolution {resolution}', leave=True, unit='B')
+        # resolution epoch
+        bar = tqdm.tqdm(range(batches_per_res[resolution]), desc=f'resolution {resolution}', leave=True, unit='B')
 
         for batch in bar:
-            for disc_batch in range(batches_per_gen):
-                real_x, gen_x = data.get_batch((resolution, resolution))
+            # discriminator training
+            for _ in range(disc_batches):
+                real_x = data[(resolution, resolution)]
+                gen_x = np.random.normal(0, 1, (data.batch_size, n_noise))
 
                 fake_x = generator.predict(gen_x)
 
                 disc_x = np.concatenate((real_x, fake_x), axis=0)
-                disc_y = np.concatenate((real_y, fake_y), axis=0)
 
                 discriminator_loss = discriminator.train_on_batch(disc_x, disc_y)
 
-            discriminator.trainable = False
-            generator_loss = combined.train_on_batch(gen_x, real_y)
 
+            # generator training
+            discriminator.trainable = False
+
+            for _ in range(gen_batches):
+                real_x = data[(resolution, resolution)]
+                gen_x = np.random.normal(0, 1, (data.batch_size, n_noise))
+
+                generator_loss = combined.train_on_batch(gen_x, real_y)
+
+
+            # utils
             bar.set_postfix(disc_loss=discriminator_loss, gen_loss=generator_loss)
 
             if debug:
@@ -66,9 +96,26 @@ def train(data, n_upscales=4, batches_per_res=10000, batches_per_gen=5, debug=Fa
                     discriminator.save(discriminator_save_path)
 
 
+
 if __name__ == '__main__':
     dataset_path = sys.argv[1]
 
     data = dataset.Dataset([dataset_path + '/' + image for image in os.listdir(dataset_path)])
 
-    train(data, debug=250, debug_path='nft_debug', save=250, generator_save_path='nft_generator.h5', discriminator_save_path='nft_discriminator.h5')
+    train(
+        data,
+        n_upscales=4,
+        batches_per_res={4: 500, 8: 1000, 16: 2500, 32: 10000, 64: 20000},
+        disc_batches=3,
+        gen_batches=1,
+        debug=250,
+        debug_path='nft_debug',
+        save=250,
+        generator_save_path='nft_generator.h5',
+        discriminator_save_path='nft_discriminator.h5',
+        n_noise=256,
+        n_channels=256,
+        momentum=0.8,
+        generator_learning_rate=1e-3,
+        discriminator_learning_rate=1e-3,
+    )
