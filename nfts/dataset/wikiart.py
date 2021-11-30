@@ -47,7 +47,6 @@ def get_artist_paintings(artist):
 
 def get_painting_info(painting):
     html = requests.get(f'https://www.wikiart.org/{painting}', verify=False).content.decode('utf-8')
-    #print(html)
 
     date = re.findall('<li>\s*<s>Date:</s>\s*.*<span itemprop="dateCreated">(.+?)</span>\s*</li>', html)
 
@@ -80,8 +79,12 @@ def get_dataset():
                 f.write(image)
 
             with open('wikiart.txt', 'a+') as f:
-                f.write(f'wikiart/image_{i}.jpg,{info[0]},{"|".join(info[1])},{"|".join(info[2])},{"|".join(info[3])}\n')
+                f.write(f'wikiart/image_{i}.jpg,{artist},{painting},{info[0]},{"|".join(info[1])},{"|".join(info[2])},{"|".join(info[3])}\n')
+
+            i += 1
 
 
-if __name__ == '__main__':
-    get_dataset()
+print(get_painting_info('en/raphael/the-veiled-woman-or-la-donna-velata'))
+
+#if __name__ == '__main__':
+    #get_dataset()
