@@ -37,7 +37,7 @@ def generator_block(resolution, n_channels=256, momentum=0.8):
     inner = Conv2D(n_channels, (4, 4), strides=1, padding='same')(inner)
     # noise
     inner = PReLU()(inner)
-    inner = BatchNormalization(momentum=momentum)(inner)
+    #inner = BatchNormalization(momentum=momentum)(inner)
 
     inner = Conv2D(n_channels, (4, 4), strides=1, padding='same')(inner)
     # noise
