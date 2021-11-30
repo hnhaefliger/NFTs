@@ -27,29 +27,39 @@ def residual_block(x, filters, kernel_size=(4, 4), strides=1, bn=False):
     return x
 
 
-def create_generator(seed_dim=128, load_path=False):
+def create_generator(seed_dim=128, momentum=0.8, load_path=False):
     inputs = Input(shape=(seed_dim))
     inner = inputs
 
-    inner = Dense(seed_dim * 8 * 8, activation='relu')(inner)
-    inner = Reshape((8, 8, seed_dim))(inner)
+    inner = Dense(seed_dim * 4, 4)(inner)
+    inner = PReLU()(inner)
+    inner = Reshape((4, 4, seed_dim))(inner)
 
     inner = UpSampling2D()(inner)
 
-    inner = Conv2D(128, (4, 4), activation='relu', padding="same")(inner)
-    inner = BatchNormalization(momentum=0.8)(inner)
+    inner = Conv2D(128, (4, 4), strides=1, padding='same')(inner)
+    inner = PReLU()(inner)
+    inner = BatchNormalization(momentum=momentum)(inner)
 
     inner = UpSampling2D()(inner)
 
-    inner = Conv2D(64, (4, 4), activation='relu', padding="same")(inner)
-    inner = BatchNormalization(momentum=0.8)(inner)
+    inner = Conv2D(128, (4, 4), strides=1, padding='same')(inner)
+    inner = PReLU()(inner)
+    inner = BatchNormalization(momentum=momentum)(inner)
 
     inner = UpSampling2D()(inner)
 
-    inner = Conv2D(32, (4, 4), activation='relu', padding="same")(inner)
-    inner = BatchNormalization(momentum=0.8)(inner)
+    inner = Conv2D(64, (4, 4), strides=1, padding='same')(inner)
+    inner = PReLU()(inner)
+    inner = BatchNormalization(momentum=momentum)(inner)
 
-    inner = Conv2D(3, kernel_size=4, padding="same")(inner)
+    inner = UpSampling2D()(inner)
+
+    inner = Conv2D(32, (4, 4), strides=1, activation='relu', padding='same')(inner)
+    inner = PReLU()(inner)
+    inner = BatchNormalization(momentum=momentum)(inner)
+
+    inner = Conv2D(3, (4, 4), strides=1, padding='same')(inner)
 
     outputs = Activation('sigmoid')(inner)
 
@@ -65,30 +75,30 @@ def create_generator(seed_dim=128, load_path=False):
     return generator
 
 
-def create_discriminator(input_shape=(64, 64, 3), load_path=False):
+def create_discriminator(input_shape=(64, 64, 3), momentum=0.8, load_path=False):
     inputs = Input(shape=input_shape)
     inner = inputs
 
-    inner = Conv2D(16, kernel_size=3, strides=2, padding="same", kernel_constraint=clamp_weights)(inner)
-    inner = LeakyReLU(alpha=0.2)(inner)
+    inner = Conv2D(16, (3, 3), strides=2, padding='same', kernel_constraint=clamp_weights)(inner)
+    inner = PReLU()(inner)
 
     inner = Dropout(0.25)(inner)
 
-    inner = Conv2D(32, kernel_size=3, strides=2, padding="same", kernel_constraint=clamp_weights)(inner)
-    inner = LeakyReLU(alpha=0.2)(inner)
-    inner = BatchNormalization(momentum=0.8)(inner)
+    inner = Conv2D(32, (3, 3), strides=2, padding='same', kernel_constraint=clamp_weights)(inner)
+    inner = PReLU()(inner)
+    inner = BatchNormalization(momentum=momentum)(inner)
 
     inner = Dropout(0.25)(inner)
 
-    inner = Conv2D(64, kernel_size=3, strides=2, padding="same", kernel_constraint=clamp_weights)(inner)
-    inner = LeakyReLU(alpha=0.2)(inner)
-    inner = BatchNormalization(momentum=0.8)(inner)
+    inner = Conv2D(64, (3, 3), strides=2, padding='same', kernel_constraint=clamp_weights)(inner)
+    inner = PReLU()(inner)
+    inner = BatchNormalization(momentum=momentum)(inner)
 
     inner = Dropout(0.25)(inner)
 
-    inner = Conv2D(128, kernel_size=3, strides=1, padding="same", kernel_constraint=clamp_weights)(inner)
-    inner = LeakyReLU(alpha=0.2)(inner)
-    inner = BatchNormalization(momentum=0.8)(inner)
+    inner = Conv2D(128, (3, 3), strides=1, padding='same', kernel_constraint=clamp_weights)(inner)
+    inner = PReLU()(inner)
+    inner = BatchNormalization(momentum=momentum)(inner)
 
     inner = Dropout(0.25)(inner)
 
