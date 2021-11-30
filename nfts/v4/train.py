@@ -12,7 +12,7 @@ import dataset
 def train(
         data,
         n_upscales=4,
-        batches_per_res=10000,
+        batches_per_res={4: 500, 8: 1000, 16: 2500, 32: 10000, 64: 20000},
         disc_batches=3,
         gen_batches=1,
         debug=False,
@@ -29,7 +29,6 @@ def train(
     if debug:
         if not os.path.isdir(debug_path):
             os.mkdir(debug_path)
-
 
     resolution = 4
     fake_y = np.ones((data.batch_size, 1))
@@ -60,7 +59,7 @@ def train(
         resolution = resolution * 2
 
         # resolution epoch
-        bar = tqdm.tqdm(range(batches_per_res), desc=f'resolution {resolution}', leave=True, unit='B')
+        bar = tqdm.tqdm(range(batches_per_res[resolution]), desc=f'resolution {resolution}', leave=True, unit='B')
 
         for batch in bar:
             # discriminator training
@@ -107,7 +106,7 @@ if __name__ == '__main__':
     train(
         data,
         n_upscales=4,
-        batches_per_res=10000,
+        batches_per_res={4: 500, 8: 1000, 16: 2500, 32: 10000, 64: 20000},
         disc_batches=3,
         gen_batches=1,
         debug=250,
