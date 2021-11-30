@@ -73,7 +73,7 @@ if __name__ == '__main__':
 
     train(
         data,
-        n_noise=256,
+        n_noise=128,
         n_batches=100000,
         gen_batches=1,
         disc_batches=3,
