@@ -86,19 +86,19 @@ def create_discriminator(input_shape=(64, 64, 3), momentum=0.8, load_path=False)
 
     inner = Conv2D(32, (3, 3), strides=2, padding='same', kernel_constraint=clamp_weights)(inner)
     inner = PReLU()(inner)
-    #inner = BatchNormalization(momentum=momentum)(inner)
+    inner = BatchNormalization(momentum=momentum)(inner)
 
     inner = Dropout(0.25)(inner)
 
     inner = Conv2D(64, (3, 3), strides=2, padding='same', kernel_constraint=clamp_weights)(inner)
     inner = PReLU()(inner)
-    #inner = BatchNormalization(momentum=momentum)(inner)
+    inner = BatchNormalization(momentum=momentum)(inner)
 
     inner = Dropout(0.25)(inner)
 
     inner = Conv2D(128, (3, 3), strides=1, padding='same', kernel_constraint=clamp_weights)(inner)
     inner = PReLU()(inner)
-    #inner = BatchNormalization(momentum=momentum)(inner)
+    inner = BatchNormalization(momentum=momentum)(inner)
 
     inner = Dropout(0.25)(inner)
 
