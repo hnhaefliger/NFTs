@@ -31,7 +31,7 @@ def create_generator(seed_dim=128, momentum=0.8, load_path=False):
     inputs = Input(shape=(seed_dim))
     inner = inputs
 
-    inner = Dense(seed_dim * 4, 4)(inner)
+    inner = Dense(seed_dim * 4 * 4)(inner)
     inner = PReLU()(inner)
     inner = Reshape((4, 4, seed_dim))(inner)
 
