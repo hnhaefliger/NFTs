@@ -20,10 +20,10 @@ def generator_base(n_noise=256, n_channels=256, momentum=0.8):
     inner = Reshape((4, 4, n_channels))(inner)
     inner = PReLU()(inner)
 
-    inner = Conv2D(n_channels, (3, 3), padding='same')(inner)
+    inner = Conv2D(n_channels, (4, 4), padding='same')(inner)
     # noise
     inner = PReLU()(inner)
-    inner = BatchNormalization(axis=3, momentum=momentum)(inner)
+    inner = BatchNormalization(momentum=momentum)(inner)
 
     return Model(inputs=inputs, outputs=inner)
 
@@ -34,15 +34,15 @@ def generator_block(resolution, n_channels=256, momentum=0.8):
 
     inner = UpSampling2D()(inner)
 
-    inner = Conv2D(n_channels, (3, 3), strides=1, padding='same')(inner)
+    inner = Conv2D(n_channels, (4, 4), strides=1, padding='same')(inner)
     # noise
     inner = PReLU()(inner)
-    inner = BatchNormalization(axis=3, momentum=momentum)(inner)
+    inner = BatchNormalization(momentum=momentum)(inner)
 
-    inner = Conv2D(n_channels, (3, 3), strides=1, padding='same')(inner)
+    inner = Conv2D(n_channels, (4, 4), strides=1, padding='same')(inner)
     # noise
     inner = PReLU()(inner)
-    inner = BatchNormalization(axis=3, momentum=momentum)(inner)
+    inner = BatchNormalization(momentum=momentum)(inner)
 
     return Model(inputs=[inputs], outputs=inner)
 
@@ -107,7 +107,7 @@ def discriminator_block(resolution, n_channels=256, momentum=0.8):
     inputs = Input(shape=resolution)
     inner = inputs
 
-    inner = Conv2D(n_channels, (3, 3), strides=2, padding='same', kernel_constraint=clamp_weights)(inner)
+    inner = Conv2D(n_channels, (4, 4), strides=2, padding='same', kernel_constraint=clamp_weights)(inner)
     inner = PReLU()(inner)
     inner = BatchNormalization(momentum=momentum)(inner)
 
