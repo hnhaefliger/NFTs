@@ -29,23 +29,6 @@ def AdaIn(n_styles=256, n_channels=256):
     return Model(inputs=[styles, inputs], outputs=inner)
 
 
-class AdaIN(Layer):
-    def build(self, input_shapes):
-        print(input_shapes)
-        self.styles_shape = input_shapes[0]
-        self.x_shape = input_shapes[1]
-
-        self.dense = Dense(self.x_shape[-1])
-        self.reshape = Reshape((self.x_shape[-1], 2))
-
-    def call(self, x):
-        x, styles = x
-        styles = self.dense(styles)
-        styles = self.reshape(styles)
-
-        return x * (styles[:, 0] + 1) + styles[:, 1]
-
-
 def generator_base(n_styles=256, n_channels=256, momentum=0.8):
     styles = Input(shape=(n_styles))
     inputs = Input(shape=(1,))  # constant
