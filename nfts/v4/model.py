@@ -101,7 +101,7 @@ def grow_generator(base, head, n_styles=256, n_channels=256, momentum=0.8):
     inputs = Input(shape=(1,))
     inner = inputs
     
-    inner = base(inner)
+    inner = base([styles, inner])
 
     base = generator_block(n_styles=n_styles, n_channels=n_channels, momentum=momentum)
     inner = base([styles, inner])
