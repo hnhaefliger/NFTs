@@ -14,10 +14,10 @@ def wasserstein_loss(y_true, y_pred):
 
 def AdaIN(styles, inner, n_styles=256, n_channels=256):
     styles1 = Dense(n_channels)(styles)
-    styles1 = Reshape(1, 1, n_channels)(styles1)
+    styles1 = Reshape((1, 1, n_channels))(styles1)
 
     styles2 = Dense(n_channels)(styles)
-    styles2 = Reshape(1, 1, n_channels)(styles2)
+    styles2 = Reshape((1, 1, n_channels))(styles2)
 
     inner = Multiply()([inner, styles1 + 1])
     inner = Add()([inner, styles2])
