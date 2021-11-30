@@ -39,12 +39,12 @@ class AdaIN(Layer):
         self.x_shape = input_shapes[0]
         self.styles_shape = input_shapes[1]
 
-        self.dense = Dense(self.self.x_shape[-1])
+        self.dense = Dense(self.x_shape[-1])
         self.reshape = Reshape((self.x_shape[-1], 2))
 
     def call(self, x):
         x, styles = x
-        styles = self.dense(x.shape[1] * 2)(styles)
+        styles = self.dense(styles)
         styles = self.reshape(styles)
 
         return x * (styles[:, 0] + 1) + styles[:, 1]
