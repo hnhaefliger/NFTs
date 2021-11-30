@@ -22,7 +22,7 @@ class Gaussian(Layer):
 
     def call(self, x):
         def noised():
-            return x + self.channel_weights * self.random.random_normal(shape=(x.shape[0], x.shape[1], x.shape[2], 1), mean=0., stddev=self.stddev, dtype=x.dtype)
+            return x + self.channel_weights * self.random.random_normal(shape=(x.shape[0], x.shape[1], x.shape[2], 1), mean=0., stddev=1., dtype=x.dtype)
 
         return noised()
 
