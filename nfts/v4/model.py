@@ -96,14 +96,25 @@ def create_generator(n_styles=256, n_channels=256, momentum=0.8):
     return base, head, Model(inputs=[styles, inputs], outputs=inner)
 
 
+def grow_generator_base(base, n_styles=256, n_channels=256, momentum=0.8):
+    styles = Input(shape=(n_styles))
+    inputs = Input(shape=(1,))
+    inner = inputs
+
+    inner = base([styles, inner])
+
+    new_base = generator_block(base.output_shape[1:], n_styles=n_styles, n_channels=n_channels, momentum=momentum)
+    inner = new_base([styles, inner])
+
+    return Model(inputs=[styles, inputs], outputs=inner)
+
+
 def grow_generator(base, head, n_styles=256, n_channels=256, momentum=0.8):
     styles = Input(shape=(n_styles))
     inputs = Input(shape=(1,))
     inner = inputs
-    
-    inner = base([styles, inner])
 
-    base = generator_block(base.output_shape, n_styles=n_styles, n_channels=n_channels, momentum=momentum)
+    base = grow_generator_base(base, n_styles=n_styles, n_channels=n_channels, momentum=momentum)
     inner = base([styles, inner])
 
     inner = head(inner)
@@ -111,9 +122,83 @@ def grow_generator(base, head, n_styles=256, n_channels=256, momentum=0.8):
     return base, head, Model(inputs=[styles, inputs], outputs=inner)
 
 
-def discriminator_block(resolution, n_channels):
-    pass
+def discriminator_base(n_channels=256):
+    inputs = Input(shape=(None, None, 3))
+    inner = inputs
+
+    inner = Conv2D(n_channels, (1, 1), strides=1, padding='same', kernel_constraint=clamp_weights)(inner)
+
+    return Model(inputs=inputs, outputs=inner)
 
 
-base, head, generator = create_generator()
-base, head, generator = grow_generator(base, head)
+def discriminator_block(resolution, n_channels=256, momentum=0.8):
+    inputs = Input(shape=resolution)
+    inner = inputs
+
+    inner = Conv2D(n_channels, (3, 3), strides=2, padding='same', kernel_constraint=clamp_weights)(inner)
+    inner = PReLU()(inner)
+    inner = BatchNormalization(momentum=momentum)(inner)
+
+    return Model(inputs=inputs, outputs=inner)
+
+
+def discriminator_head(n_channels=256):
+    inputs = Input(shape=(4, 4, n_channels))
+    inner = inputs
+
+    inner = Flatten()(inner)
+
+    inner = Dense(1)(inner)
+    inner = Activation('sigmoid')(inner)
+
+    return Model(inputs=inputs, outputs=inner)
+
+
+def create_discriminator(n_channels=256):
+    inputs = Input(shape=(4, 4, n_channels))
+    inner = inputs
+
+    base = discriminator_base(n_channels=n_channels)
+    inner = base(inner)
+
+    head = discriminator_head(n_channels=n_channels)
+    inner = head(inner)
+
+    return base, head, Model(inputs=inputs, outputs=inner)
+
+
+def grow_discriminator_head(head, n_channels=256, momentum=0.8):
+    resolution = (head.input_shape[1]*2, head.input_shape[1]*2, n_channels)
+
+    inputs = Input(shape=resolution)
+    inner = inputs
+
+    new_head = discriminator_block(resolution, n_channels=n_channels, momentum=momentum)
+    inner = new_head(inner)
+
+    inner = head(inner)
+
+    return Model(inputs=inputs, outputs=inner)
+
+
+def grow_discriminator(base, head, n_channels=256, momentum=0.8):
+    resolution = (head.input_shape[1]*2, head.input_shape[1]*2, n_channels)
+
+    inputs = Input(shape=resolution)
+    inner = inputs
+
+    inner = base(inner)
+
+    head = grow_discriminator_head(head, n_channels=n_channels, momentum=momentum)
+    inner = head(inner)
+
+    return base, head, Model(inputs=inputs, outputs=inner)
+
+
+generator_base, generator_head, generator = create_generator()
+generator_base, generator_head, generator = grow_generator(generator_base, generator_head)
+generator_base, generator_head, generator = grow_generator(generator_base, generator_head)
+
+discriminator_base, discriminator_head, discriminator = create_discriminator()
+discriminator_base, discriminator_head, discriminator = grow_discriminator(discriminator_base, discriminator_head)
+discriminator_base, discriminator_head, discriminator = grow_discriminator(discriminator_base, discriminator_head)
