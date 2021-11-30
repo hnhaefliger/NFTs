@@ -14,7 +14,7 @@ def wasserstein_loss(y_true, y_pred):
 
 def AdaIn(n_styles=256, n_channels=256):
     styles = Input(shape=(n_styles))
-    inputs = Input(shape=(1,))  # constant
+    inputs = Input(shape=(None, None, n_channels))
     inner = inputs
 
     styles1 = Dense(n_channels)(styles)
