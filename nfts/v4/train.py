@@ -39,7 +39,7 @@ def train(
 
     generator_base, generator_head, generator = model.create_generator(n_styles=n_styles, n_channels=n_channels, momentum=momentum)
 
-    discriminator_base, discriminator_head, discriminator = model.create_discriminator(n_channels=n_channels, momentum=momentum)
+    discriminator_base, discriminator_head, discriminator = model.create_discriminator(n_channels=n_channels)
     discriminator.compile(loss=model.wasserstein_loss, optimizer=tf.keras.optimizers.Adam(learning_rate=discriminator_learning_rate))
 
     combined = model.create_combined(generator, discriminator, n_styles=n_styles)
