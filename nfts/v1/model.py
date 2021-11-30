@@ -35,7 +35,7 @@ def create_generator(seed_dim=128, momentum=0.8, load_path=False):
     inner = PReLU()(inner)
     inner = Reshape((8, 8, seed_dim))(inner)
 
-    inner = UpSampling2D()(inner)
+    #inner = UpSampling2D()(inner)
 
     #inner = Conv2D(128, (4, 4), strides=1, padding='same')(inner)
     #inner = PReLU()(inner)
