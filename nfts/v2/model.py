@@ -50,7 +50,7 @@ def create_generator(n_noise=256, seed_depth=1024, kernel_size=5, noise_reshape=
         if noise:
             inner = GaussianNoise(1)(inner, training=True)
 
-    inner = Conv2D(3, (kernel_size, kernel_size), strides=1, padding='same')
+    inner = Conv2D(3, (kernel_size, kernel_size), strides=1, padding='same')(inner)
     inner = Activation('tanh')(inner)
     inner = (inner + tf.constant(1)) / tf.constant(2)
 
