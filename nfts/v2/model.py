@@ -52,7 +52,7 @@ def create_generator(n_noise=256, seed_depth=1024, kernel_size=5, noise_reshape=
 
     inner = Conv2D(3, (kernel_size, kernel_size), strides=1, padding='same')
     inner = Activation('tanh')(inner)
-    inner = (inner + 1) / 2
+    inner = (inner + tf.constant(1)) / tf.constant(2)
 
     generator = Model(inputs=inputs, outputs=inner)
 
