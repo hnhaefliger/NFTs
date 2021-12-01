@@ -51,8 +51,7 @@ def create_generator(n_noise=256, seed_depth=1024, kernel_size=5, noise_reshape=
             inner = GaussianNoise(1)(inner, training=True)
 
     inner = Conv2D(3, (kernel_size, kernel_size), strides=1, padding='same')(inner)
-    inner = Activation('tanh')(inner)
-    inner = (inner + 1) / 2
+    inner = Activation('sigmoid')(inner)
 
     generator = Model(inputs=inputs, outputs=inner)
 
