@@ -1,7 +1,6 @@
 import tensorflow as tf
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input, Dense, Conv2D, BatchNormalization, Reshape, Multiply, LeakyReLU, Flatten, Add, UpSampling2D, Activation, Layer, PReLU
-from tensorflow.keras.optimizers import RMSprop
+from tensorflow.keras.layers import Input, Dense, Conv2D, BatchNormalization, Reshape, Dropout, GaussianNoise, Flatten, Add, UpSampling2D, Activation, PReLU
 
 
 def clamp_weights(w):
@@ -9,169 +8,104 @@ def clamp_weights(w):
 
 
 def wasserstein_loss(y_true, y_pred):
-  return -tf.reduce_mean(y_true * y_pred)
+  return tf.reduce_mean(y_true * y_pred)
 
 
-def generator_base(n_noise=256, n_channels=256, momentum=0.8):
-    inputs = Input(shape=(n_noise))
-    inner = inputs
+def residual_block(x, filters, kernel_size=(4, 4), strides=1, bn=False):
+    x = Conv2D(filters, kernel_size, strides=strides, padding='same')(x)
+    x = PReLU()(x)
 
-    inner = Dense(4 * 4 * n_channels)(inputs)
-    inner = Reshape((4, 4, n_channels))(inner)
+    inner = Conv2D(filters, kernel_size, strides=1, padding='same')(x)
     inner = PReLU()(inner)
 
-    inner = Conv2D(n_channels, (4, 4), padding='same')(inner)
-    # noise
-    inner = PReLU()(inner)
-    inner = BatchNormalization(momentum=momentum)(inner)
+    x = Add()([x, inner])
 
-    return Model(inputs=inputs, outputs=inner)
+    if bn:
+        x = BatchNormalization()(x)
 
-
-def generator_block(resolution, n_channels=256, momentum=0.8):
-    inputs = Input(shape=resolution)
-    inner = inputs
-
-    inner = UpSampling2D()(inner)
-
-    inner = Conv2D(n_channels, (4, 4), strides=1, padding='same')(inner)
-    # noise
-    inner = PReLU()(inner)
-    #inner = BatchNormalization(momentum=momentum)(inner)
-
-    inner = Conv2D(n_channels, (4, 4), strides=1, padding='same')(inner)
-    # noise
-    inner = PReLU()(inner)
-    inner = BatchNormalization(momentum=momentum)(inner)
-
-    return Model(inputs=[inputs], outputs=inner)
+    return x
 
 
-def generator_head(n_channels=256):
-    inputs = Input(shape=(None, None, n_channels))
-    inner = inputs
+def create_generator(n_noise=256, seed_depth=1024, kernel_size=5, noise_reshape=8, n_upscales=3, momentum=0.8, load_path=0.8, bn=True, noise=False):
+    assert kernel_size <= noise_reshape
+    assert seed_depth // (2 ** n_upscales) == seed_depth / (2 ** n_upscales)
 
-    inner = Conv2D(3, (1, 1), strides=1, padding='same')(inner)
-    inner = Activation('sigmoid')(inner)
-
-    return Model(inputs=inputs, outputs=inner)
-
-
-def create_generator(n_noise=256, n_channels=256, momentum=0.8):
     inputs = Input(shape=(n_noise,))
     inner = inputs
 
-    base = generator_base(n_noise=n_noise, n_channels=n_channels, momentum=momentum)
-    inner = base(inner)
-
-    head = generator_head(n_channels=n_channels)
-    inner = head(inner)
-
-    return base, head, Model(inputs=inputs, outputs=inner)
-
-
-def grow_generator_base(base, n_noise=256, n_channels=256, momentum=0.8):
-    inputs = Input(shape=(n_noise,))
-    inner = inputs
-
-    inner = base(inner)
-
-    new_base = generator_block(base.output_shape[1:], n_channels=n_channels, momentum=momentum)
-    inner = new_base(inner)
-
-    return Model(inputs=inputs, outputs=inner)
-
-
-def grow_generator(base, head, n_noise=256, n_channels=256, momentum=0.8):
-    inputs = Input(shape=(n_noise,))
-    inner = inputs
-
-    base = grow_generator_base(base, n_noise=n_noise, n_channels=n_noise, momentum=momentum)
-    inner = base(inner)
-
-    inner = head(inner)
-
-    return base, head, Model(inputs=inputs, outputs=inner)
-
-
-def discriminator_base(n_channels=256):
-    inputs = Input(shape=(None, None, 3))
-    inner = inputs
-
-    inner = Conv2D(n_channels, (1, 1), strides=1, padding='same', kernel_constraint=clamp_weights)(inner)
-
-    return Model(inputs=inputs, outputs=inner)
-
-
-def discriminator_block(resolution, n_channels=256, momentum=0.8):
-    inputs = Input(shape=resolution)
-    inner = inputs
-
-    inner = Conv2D(n_channels, (4, 4), strides=2, padding='same', kernel_constraint=clamp_weights)(inner)
+    inner = Dense(seed_depth * noise_reshape * noise_reshape)(inner)
     inner = PReLU()(inner)
-    inner = BatchNormalization(momentum=momentum)(inner)
+    inner = Reshape((noise_reshape, noise_reshape, seed_depth))(inner)
 
-    return Model(inputs=inputs, outputs=inner)
+    for _ in range(n_upscales):
+        noise_reshape = noise_reshape / 2
+
+        inner = UpSampling2D()(inner)
+        inner = Conv2D(noise_reshape, (kernel_size, kernel_size), strides=1, padding='same')(inner)
+        inner = PReLU()(inner)
+        
+        if bn:
+            inner = BatchNormalization(momentum=momentum)(inner)
+
+        if noise:
+            inner = GaussianNoise(1)(inner, training=True)
+
+    inner = Conv2D(3, (kernel_size, kernel_size), strides=1, padding='same')
+    inner = Activation('tanh')(inner)
+    inner = (inner + 1) / 2
+
+    generator = Model(inputs=inputs, outputs=inner)
+
+    if load_path:
+        try:
+            generator.load_weights(load_path)
+
+        except:
+            print('failed to load generator')
+
+    return generator
 
 
-def discriminator_head(n_channels=256):
-    inputs = Input(shape=(4, 4, n_channels))
+def create_discriminator(input_shape=(64, 64, 3), kernel_size=5, n_filters=32, n_downscales=4, momentum=0.8, load_path=False, bn=True, dropout=0.2):
+    inputs = Input(shape=input_shape)
     inner = inputs
+
+    for _ in range(n_downscales):
+        inner = Conv2D(n_filters, (kernel_size, kernel_size), strides=2, padding='same', kernel_constraint=clamp_weights)(inner)
+        inner = PReLU()(inner)
+
+        if bn:
+            inner = BatchNormalization(momentum=momentum)(inner)
+
+        inner = Dropout(dropout)(inner)
+
+        n_filters = n_filters * 2
 
     inner = Flatten()(inner)
+    inner = Dense(1, kernel_constraint=clamp_weights)(inner)
 
-    inner = Dense(1)(inner)
-    inner = Activation('sigmoid')(inner)
+    discriminator = Model(inputs=inputs, outputs=inner)
 
-    return Model(inputs=inputs, outputs=inner)
+    if load_path:
+        try:
+            discriminator.load_weights(load_path)
 
+        except: 
+            print('failed to load discriminator')
 
-def create_discriminator(n_channels=256):
-    inputs = Input(shape=(4, 4, 3))
-    inner = inputs
-
-    base = discriminator_base(n_channels=n_channels)
-    inner = base(inner)
-
-    head = discriminator_head(n_channels=n_channels)
-    inner = head(inner)
-
-    return base, head, Model(inputs=inputs, outputs=inner)
+    return discriminator
 
 
-def grow_discriminator_head(head, n_channels=256, momentum=0.8):
-    resolution = (head.input_shape[1]*2, head.input_shape[1]*2, n_channels)
-
-    inputs = Input(shape=resolution)
-    inner = inputs
-
-    new_head = discriminator_block(resolution, n_channels=n_channels, momentum=momentum)
-    inner = new_head(inner)
-
-    inner = head(inner)
-
-    return Model(inputs=inputs, outputs=inner)
-
-
-def grow_discriminator(base, head, n_channels=256, momentum=0.8):
-    resolution = (head.input_shape[1]*2, head.input_shape[1]*2, 3)
-
-    inputs = Input(shape=resolution)
-    inner = inputs
-
-    inner = base(inner)
-
-    head = grow_discriminator_head(head, n_channels=n_channels, momentum=momentum)
-    inner = head(inner)
-
-    return base, head, Model(inputs=inputs, outputs=inner)
-
-
-def create_combined(generator, discriminator, n_noise=256):
-    inputs = Input(shape=(n_noise,))
+def create_combined(generator, discriminator, seed_dim=128,):
+    inputs = Input(shape=(seed_dim,))
     inner = inputs
 
     inner = generator(inner)
+
+    discriminator.trainable = False
     inner = discriminator(inner)
 
-    return Model(inputs=inputs, outputs=inner)
+    outputs = inner
+
+    return Model(inputs=inputs, outputs=outputs)
+
