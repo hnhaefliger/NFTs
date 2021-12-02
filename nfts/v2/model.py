@@ -13,15 +13,17 @@ def wasserstein_loss(y_true, y_pred):
 
 def residual_block(x, filters, kernel_size=(4, 4), strides=1, bn=False):
     x = Conv2D(filters, kernel_size, strides=strides, padding='same')(x)
-    x = PReLU()(x)
+    if bn: x = BatchNormalization()(x)
 
-    inner = Conv2D(filters, kernel_size, strides=1, padding='same')(x)
+    inner = Conv2D(filters, kernel_size, strides=1, padding='same')(x) 
+    if bn: inner = BatchNormalization()(inner)
     inner = PReLU()(inner)
 
-    x = Add()([x, inner])
+    inner = Conv2D(filters, kernel_size, strides=1, padding='same')(x)
+    if bn: inner = BatchNormalization()(inner)
 
-    if bn:
-        x = BatchNormalization()(x)
+    x = Add()([x, inner])
+    inner = PReLU()(inner)
 
     return x
 
@@ -42,13 +44,9 @@ def create_generator(n_noise=256, seed_depth=1024, kernel_size=5, noise_reshape=
 
         inner = UpSampling2D()(inner)
         inner = Conv2D(noise_reshape, (kernel_size, kernel_size), strides=1, padding='same')(inner)
+        if bn:  inner = BatchNormalization(momentum=momentum)(inner)
         inner = PReLU()(inner)
-        
-        if bn:
-            inner = BatchNormalization(momentum=momentum)(inner)
-
-        if noise:
-            inner = GaussianNoise(1)(inner, training=True)
+        if noise: inner = GaussianNoise(1)(inner, training=True)
 
     inner = Conv2D(3, (kernel_size, kernel_size), strides=1, padding='same')(inner)
     inner = Activation('sigmoid')(inner)
@@ -71,10 +69,8 @@ def create_discriminator(input_shape=(64, 64, 3), kernel_size=5, n_filters=32, n
 
     for _ in range(n_downscales):
         inner = Conv2D(n_filters, (kernel_size, kernel_size), strides=2, padding='same', kernel_constraint=clamp_weights)(inner)
+        if bn: inner = BatchNormalization(momentum=momentum)(inner)
         inner = PReLU()(inner)
-
-        if bn:
-            inner = BatchNormalization(momentum=momentum)(inner)
 
         inner = Dropout(dropout)(inner)
 
