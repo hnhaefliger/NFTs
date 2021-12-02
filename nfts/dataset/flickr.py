@@ -16,7 +16,7 @@ def get_results(query, size='q', target=20000):
         l: 1024 x ? or ? x 1024
     '''
     def get_photos(page):
-        return [image for image in requests.get(
+        response = requests.get(
             'https://api.flickr.com/services/rest',
             params={
                 'sort': 'relevance',
@@ -30,7 +30,9 @@ def get_results(query, size='q', target=20000):
                 'format': 'json',
                 'nojsoncallback': 1,
             }
-        ).json()['photos']['photo'] if f'url_{size}' in image]
+        )
+
+        return [image for image in response.json()['photos']['photo'] if f'url_{size}' in image]
 
     page = 0
     results = []
