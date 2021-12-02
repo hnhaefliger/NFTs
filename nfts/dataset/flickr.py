@@ -87,4 +87,4 @@ def get_images(images, location):
 if __name__ == '__main__':
     import sys
 
-    get_images(get_results(sys.argv[0], target=int(sys.argv[2])), sys.argv[3])
+    get_images(get_results(sys.argv[1], target=int(sys.argv[2])), sys.argv[3])
