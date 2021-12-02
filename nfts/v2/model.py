@@ -44,8 +44,8 @@ def create_generator(n_noise=256, seed_depth=1024, kernel_size=5, noise_reshape=
 
         inner = UpSampling2D()(inner)
         inner = Conv2D(noise_reshape, (kernel_size, kernel_size), strides=1, padding='same')(inner)
-        if bn:  inner = BatchNormalization(momentum=momentum)(inner)
         inner = PReLU()(inner)
+        if bn:  inner = BatchNormalization(momentum=momentum)(inner)
         if noise: inner = GaussianNoise(1)(inner, training=True)
 
     inner = Conv2D(3, (kernel_size, kernel_size), strides=1, padding='same')(inner)
@@ -69,8 +69,8 @@ def create_discriminator(input_shape=(64, 64, 3), kernel_size=5, n_filters=32, n
 
     for _ in range(n_downscales):
         inner = Conv2D(n_filters, (kernel_size, kernel_size), strides=2, padding='same', kernel_constraint=clamp_weights)(inner)
-        if bn: inner = BatchNormalization(momentum=momentum)(inner)
         inner = PReLU()(inner)
+        if bn: inner = BatchNormalization(momentum=momentum)(inner)
 
         inner = Dropout(dropout)(inner)
 
