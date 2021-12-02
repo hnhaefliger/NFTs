@@ -1,5 +1,15 @@
 import requests
 import asyncio
+import re
+
+
+def get_api_key():
+    response = requests.get('https://www.flickr.com/').content.decode('utf-8')
+
+    keys = re.findall('root.YUI_config.flickr.api.site_key = "(.+?)";', response)
+
+    return keys[0]
+
 
 def get_results(query, size='q', target=20000):
     '''
@@ -26,7 +36,7 @@ def get_results(query, size='q', target=20000):
                 'page': page,
                 'text': query,
                 'method': 'flickr.photos.search',
-                'api_key': '973475ba6159373c1b5431949b1bc8df',
+                'api_key': get_api_key(),
                 'format': 'json',
                 'nojsoncallback': 1,
             }
