@@ -77,7 +77,7 @@ if __name__ == '__main__':
         n_noise=128,
         n_batches=100000,
         gen_batches=1,
-        disc_batches=1,
+        disc_batches=3,
         debug=250,
         debug_path='nft_debug',
         save=250,
