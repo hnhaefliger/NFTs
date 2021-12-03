@@ -12,7 +12,7 @@ def random_crop(image, resolution):
 
 
 class Dataset(Sequence):
-    def __init__(self, content_images, style_images, resolution=(64, 64), batch_size=16):
+    def __init__(self, content_images, style_images, resolution=(32, 32), batch_size=16):
         self.content_images = content_images
         self.style_images = style_images
         self.batch_size = batch_size

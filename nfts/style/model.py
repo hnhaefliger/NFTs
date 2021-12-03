@@ -1,9 +1,7 @@
-from .discriminator import PhoramaDiscriminator
-from tensorflow.keras.layers import Input, Dense, Conv2D, BatchNormalization, LeakyReLU, Flatten
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Activation, Concatenate, Conv2DTranspose
+from tensorflow.keras.layers import Input, Conv2D, MaxPooling2D, Activation, Concatenate, Conv2DTranspose, Dense, BatchNormalization, LeakyReLU, Flatten
 
 
 def u_net_layer(x, filters):
@@ -21,11 +19,13 @@ def down_conv(x, filters):
 
 
 def up_conv(x, filters):
-    x = Conv2DTranspose(filters, (2, 2), strides=1, padding='same')
+    x = Conv2DTranspose(filters, (2, 2), strides=2, padding='same')(x)
+
+    return x
 
 
 def concat(x, y):
-    inner = Concatenate()(x, y)
+    inner = Concatenate()([x, y])
 
     return inner
 
@@ -84,7 +84,7 @@ def d_block(inputs, filters, strides=1, bn=True):
     return x
 
 
-def discriminator(resolution=16):
+def discriminator(resolution=32):
     inputs = Input(shape=(resolution, resolution, 3))
     inner = inputs
 

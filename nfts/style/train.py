@@ -46,7 +46,7 @@ def train(
         content_images, style_images = data[batch]
 
         content_vgg = vgg.predict(content_images)
-        fake_images = generator.predice(content_images)
+        fake_images = generator.predict(content_images)
 
         disc_x = np.concatenate((style_images, fake_images), axis=0)
 
@@ -76,7 +76,8 @@ if __name__ == '__main__':
 
     data = dataset.Dataset(
         [f'{content_path}/{image}' for image in os.listdir(content_path)],
-        [f'{style_path}/{image}' for image in os.listdir(style_path)]
+        [f'{style_path}/{image}' for image in os.listdir(style_path)],
+        resolution=(32, 32),
     )
 
     train(
@@ -89,7 +90,7 @@ if __name__ == '__main__':
         discriminator_save_path='nft_discriminator.h5',
         generator_learning_rate=1e-3,
         discriminator_learning_rate=1e-3,
-        resolution=16,
+        resolution=32,
         style_weight=float(sys.argv[4]),
         content_weight=float(sys.argv[5]),
     )
