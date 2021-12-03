@@ -50,6 +50,7 @@ def train(
 
         disc_x = np.concatenate((style_images, fake_images), axis=0)
 
+        discriminator.trainable = True
         discriminator_loss = discriminator.train_on_batch(disc_x, disc_y)
 
         discriminator.trainable = False
