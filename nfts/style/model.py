@@ -108,6 +108,9 @@ def discriminator(resolution=32):
 
 
 def combined(generator, discriminator, vgg):
+    discriminator.trainable = False
+    vgg.trainable = False
+    
     inputs = Input(shape=(None, None, 3))
     inner = inputs
 
